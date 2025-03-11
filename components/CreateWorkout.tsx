@@ -8,7 +8,6 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  GestureResponderEvent,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons'; 
 
@@ -26,34 +25,19 @@ export interface Workout {
   exercises: Exercise[];
 }
 
-/**
- * Propriedades do componente de criação:
- * - visible: controla se o modal está aberto ou fechado
- * - onClose: função para fechar o modal
- * - onCreateWorkout: callback que recebe o objeto do treino criado
- */
 interface CreateWorkoutProps {
   visible: boolean;
-  onClose: (event?: GestureResponderEvent) => void;
+  onClose: () => void;
   onCreateWorkout: (workout: Workout) => void;
 }
 
-const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
-  visible,
-  onClose,
-  onCreateWorkout,
-}) => {
-  const [workoutName, setWorkoutName] = useState<string>('');
+const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, onCreateWorkout }) => {
+  const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exerciseName, setExerciseName] = useState('');
+  const [exerciseSets, setExerciseSets] = useState('');
+  const [exerciseReps, setExerciseReps] = useState('');
 
-  // Estados para o exercício que estamos adicionando
-  const [exerciseName, setExerciseName] = useState<string>('');
-  const [exerciseSets, setExerciseSets] = useState<string>('');
-  const [exerciseReps, setExerciseReps] = useState<string>('');
-
-  /**
-   * Adiciona um novo exercício à lista
-   */
   const addExercise = () => {
     if (!exerciseName.trim() || !exerciseSets.trim() || !exerciseReps.trim()) return;
 
@@ -70,36 +54,24 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
     setExerciseReps('');
   };
 
-  /**
-   * Cria o treino e envia para o componente-pai
-   */
   const handleCreateWorkout = () => {
     if (!workoutName.trim()) return;
 
     const newWorkout: Workout = {
       id: Date.now().toString(),
       name: workoutName,
-      date: new Date().toISOString(), // Data atual
+      date: new Date().toLocaleDateString(), // Formato mais amigável
       exercises,
     };
 
     onCreateWorkout(newWorkout);
-
-    // Limpa o formulário após salvar
     setWorkoutName('');
     setExercises([]);
-
-    // Fecha o modal
     onClose();
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose} // chamado ao fechar no Android
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -107,7 +79,6 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
           </TouchableOpacity>
 
           <Text style={styles.title}>Criar Treino</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Nome do treino"
@@ -116,8 +87,7 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
             onChangeText={setWorkoutName}
           />
 
-          <Text style={styles.subtitle}>Exercícios</Text>
-
+          <Text style={styles.subtitle}>Adicionar Exercícios</Text>
           <TextInput
             style={styles.input}
             placeholder="Nome do exercício"
@@ -146,7 +116,7 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
           <FlatList
             style={{ maxHeight: 120, marginVertical: 10 }}
             data={exercises}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.exerciseItem}>
                 <Text style={styles.exerciseText}>
@@ -163,12 +133,10 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({
   );
 };
 
-export default CreateWorkoutModal;
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)', // fundo escurecido
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -214,3 +182,5 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+
+export default CreateWorkoutModal;

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  GestureResponderEvent,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,21 +13,26 @@ import CreateWorkout, { Workout } from '../../components/CreateWorkout';
 
 export default function WorkoutsScreen() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [showCreate, setShowCreate] = useState<boolean>(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [expandedWorkoutIds, setExpandedWorkoutIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadWorkouts();
   }, []);
 
+  const removeWorkout = (id: string) => {
+    const updatedWorkouts = workouts.filter((workout) => workout.id !== id);
+    setWorkouts(updatedWorkouts);
+    saveWorkouts(updatedWorkouts);
+  };
+
+
   const loadWorkouts = async () => {
     try {
       const storedWorkouts = await AsyncStorage.getItem('@workouts');
-      if (storedWorkouts) {
-        setWorkouts(JSON.parse(storedWorkouts));
-      }
+      if (storedWorkouts) setWorkouts(JSON.parse(storedWorkouts));
     } catch (error) {
-      console.log('Erro ao carregar treinos:', error);
+      console.error('Erro ao carregar treinos:', error);
     }
   };
 
@@ -36,7 +40,7 @@ export default function WorkoutsScreen() {
     try {
       await AsyncStorage.setItem('@workouts', JSON.stringify(updatedWorkouts));
     } catch (error) {
-      console.log('Erro ao salvar treinos:', error);
+      console.error('Erro ao salvar treinos:', error);
     }
   };
 
@@ -48,57 +52,41 @@ export default function WorkoutsScreen() {
   };
 
   const toggleWorkoutDetails = (id: string) => {
-    if (expandedWorkoutIds.includes(id)) {
-      setExpandedWorkoutIds(expandedWorkoutIds.filter(workoutId => workoutId !== id));
-    } else {
-      setExpandedWorkoutIds([...expandedWorkoutIds, id]);
-    }
+    setExpandedWorkoutIds((prevIds) =>
+      prevIds.includes(id) ? prevIds.filter(workoutId => workoutId !== id) : [...prevIds, id]
+    );
   };
 
-  const totalExercises = workouts.reduce((acc, w) => acc + w.exercises.length, 0);
-  const totalSets = workouts.reduce((acc, w) => {
-    return acc + w.exercises.reduce((sum, ex) => sum + ex.sets, 0);
-  }, 0);
-  const totalWeight = workouts.reduce((acc, w) => {
-    return acc + w.exercises.reduce((sum, ex) => sum + (ex as any).weight || 0, 0);
-  }, 0);
-
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerDate}>Today</Text>
-        </View>
+        <Text style={styles.headerDate}>My Workouts</Text>
         <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
       </View>
 
-      <View style={styles.summaryContainer}>
-        <Text style={styles.summaryText}>
-          {totalExercises} EXS • {totalSets} SETS • {totalWeight} KG
-        </Text>
-      </View>
 
       {showCreate && (
-        <CreateWorkout onCreateWorkout={handleCreateWorkout} visible={showCreate} onClose={function (event?: GestureResponderEvent): void {
-                  throw new Error('Function not implemented.');
-              } } />
+        <CreateWorkout onCreateWorkout={handleCreateWorkout} visible={showCreate} onClose={() => setShowCreate(false)} />
       )}
 
-      <FlatList
-        data={workouts}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => toggleWorkoutDetails(item.id)}
-            style={styles.workoutItem}
-          >
-            <Text style={styles.workoutName}>{item.name}</Text>
+    <FlatList
+      data={workouts}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{ paddingBottom: 80 }}
+      renderItem={({ item }) => (
+        <View style={styles.itemAreaContainer}>
+          <TouchableOpacity onPress={() => toggleWorkoutDetails(item.id)} style={styles.workoutItem}>
+            <View style={styles.workoutHeader}>
+              <Text style={styles.workoutName}>{item.name}</Text>
+              <TouchableOpacity onPress={() => removeWorkout(item.id)}>
+                <Ionicons style={styles.deleteButton} name="trash" size={25} color="#ff4d4d" />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.workoutDate}>
-              Criado em: {new Date(item.date).toLocaleString()}
+              {new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </Text>
 
-            {/* Se estiver expandido, mostra os exercícios */}
             {expandedWorkoutIds.includes(item.id) && (
               <View style={styles.exercisesContainer}>
                 {item.exercises.map((exercise) => (
@@ -109,14 +97,11 @@ export default function WorkoutsScreen() {
               </View>
             )}
           </TouchableOpacity>
-        )}
-      />
+        </View>
+      )}
+    />
 
-      {/* Botão flutuante para criar novo treino */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowCreate(!showCreate)}
-      >
+      <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(!showCreate)}>
         <Ionicons name="add" size={24} color="#fff" />
         <Text style={styles.fabText}>Add workout</Text>
       </TouchableOpacity>
@@ -124,32 +109,40 @@ export default function WorkoutsScreen() {
   );
 }
 
-// Estilos
-const screenWidth = Dimensions.get('window').width;
-
 const styles = StyleSheet.create({
+
+  workoutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
+  itemAreaContainer: {
+    width: '100%',
+    marginBottom: 10,
+  },
+
+  deleteButton: {
+    marginTop: 10,
+    fontSize: 25,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingTop: 40,
   },
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   headerDate: {
     fontSize: 20,
     color: '#fff',
-    // fontFamily: 'Poppins-SemiBold',
+    marginBottom: 40,
   },
-  // Resumo
   summaryContainer: {
     marginTop: 20,
     alignItems: 'center',
@@ -158,9 +151,7 @@ const styles = StyleSheet.create({
   summaryText: {
     color: '#fff',
     fontSize: 16,
-    // fontFamily: 'Poppins-Regular',
   },
-  // Treino
   workoutItem: {
     backgroundColor: '#1a1a1a',
     borderRadius: 10,
@@ -170,13 +161,11 @@ const styles = StyleSheet.create({
   workoutName: {
     fontSize: 18,
     color: '#fff',
-    // fontFamily: 'Poppins-SemiBold',
   },
   workoutDate: {
     fontSize: 12,
     color: '#aaa',
     marginTop: 4,
-    // fontFamily: 'Poppins-Regular',
   },
   exercisesContainer: {
     marginTop: 10,
@@ -186,7 +175,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 5,
   },
-
   fab: {
     flexDirection: 'row',
     position: 'absolute',
@@ -203,6 +191,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     marginLeft: 8,
-    // fontFamily: 'Poppins-SemiBold',
   },
 });
