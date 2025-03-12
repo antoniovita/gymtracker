@@ -26,9 +26,13 @@ export default function TimerScreen() {
     setIsRunning(true);
   };
 
+  const pauseTimer = () => {
+    setIsRunning(false)
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Timer</Text>
+      <Text style={styles.timer}>{`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}</Text>
       <Picker
         selectedValue={selectedMinutes}
         onValueChange={(itemValue) => setSelectedMinutes(itemValue)}
@@ -39,16 +43,28 @@ export default function TimerScreen() {
           <Picker.Item key={num + 1} label={`${num + 1} min`} value={num + 1} />
         ))}
       </Picker>
-      <TouchableOpacity style={styles.button} onPress={startTimer}>
-        <Ionicons name="play" size={24} color="#fff" />
-        <Text style={styles.buttonText}>Iniciar</Text>
-      </TouchableOpacity>
-      <Text style={styles.timer}>{`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}</Text>
+
+      <View style={styles.buttonArea}>
+        <TouchableOpacity style={styles.button} onPress={startTimer}>
+          <Ionicons name="play" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={pauseTimer}>
+          <Ionicons name="pause" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+
+  buttonArea: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -57,15 +73,17 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 24,
-    color: '#fff',
+    color: '#ffff',
     marginBottom: 20,
   },
   picker: {
-    width: '80%',
+    width: '30%',
+    marginTop: 20,
+    height: 30,
     backgroundColor: '#1a1a1a',
     color: '#fff',
     borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 30,
   },
   pickerItem: {
     color: '#fff',
@@ -75,7 +93,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#00aaff',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: '100%',
     alignItems: 'center',
   },
   buttonText: {
@@ -87,5 +105,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: '#fff',
     marginTop: 20,
+    fontWeight: 'bold'
   },
 });

@@ -9,7 +9,8 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons'; 
+import { Picker } from '@react-native-picker/picker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export interface Exercise {
   id: string;
@@ -35,23 +36,37 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [exerciseName, setExerciseName] = useState('');
-  const [exerciseSets, setExerciseSets] = useState('');
-  const [exerciseReps, setExerciseReps] = useState('');
+  const [exerciseSets, setExerciseSets] = useState(1);
+  const [exerciseReps, setExerciseReps] = useState(1);
+  const [editingExercise, setEditingExercise] = useState<string | null>(null);
 
-  const addExercise = () => {
-    if (!exerciseName.trim() || !exerciseSets.trim() || !exerciseReps.trim()) return;
+  const addOrEditExercise = () => {
+    if (!exerciseName.trim()) return;
 
-    const newExercise: Exercise = {
-      id: Date.now().toString(),
-      name: exerciseName,
-      sets: parseInt(exerciseSets, 10),
-      reps: parseInt(exerciseReps, 10),
-    };
+    if (editingExercise) {
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === editingExercise ? { ...ex, name: exerciseName, sets: exerciseSets, reps: exerciseReps } : ex
+        )
+      );
+      setEditingExercise(null);
+    } else {
+      const newExercise: Exercise = {
+        id: Date.now().toString(),
+        name: exerciseName,
+        sets: exerciseSets,
+        reps: exerciseReps,
+      };
+      setExercises([...exercises, newExercise]);
+    }
 
-    setExercises([...exercises, newExercise]);
     setExerciseName('');
-    setExerciseSets('');
-    setExerciseReps('');
+    setExerciseSets(1);
+    setExerciseReps(1);
+  };
+
+  const deleteExercise = (id: string) => {
+    setExercises(exercises.filter((ex) => ex.id !== id));
   };
 
   const handleCreateWorkout = () => {
@@ -60,7 +75,7 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
     const newWorkout: Workout = {
       id: Date.now().toString(),
       name: workoutName,
-      date: new Date().toLocaleDateString(), // Formato mais amigável
+      date: new Date().toLocaleDateString(),
       exercises,
     };
 
@@ -95,23 +110,19 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
             value={exerciseName}
             onChangeText={setExerciseName}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Séries"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            value={exerciseSets}
-            onChangeText={setExerciseSets}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Repetições"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            value={exerciseReps}
-            onChangeText={setExerciseReps}
-          />
-          <Button title="Adicionar Exercício" onPress={addExercise} color="#00aaff" />
+          <Text style={styles.label}>Séries:</Text>
+          <Picker selectedValue={exerciseSets} onValueChange={(value) => setExerciseSets(value)}>
+            {[...Array(10).keys()].map((i) => (
+              <Picker.Item key={i + 1} label={`${i + 1}`} value={i + 1} />
+            ))}
+          </Picker>
+          <Text style={styles.label}>Repetições:</Text>
+          <Picker selectedValue={exerciseReps} onValueChange={(value) => setExerciseReps(value)}>
+            {[...Array(50).keys()].map((i) => (
+              <Picker.Item key={i + 1} label={`${i + 1}`} value={i + 1} />
+            ))}
+          </Picker>
+          <Button title={editingExercise ? "Editar Exercício" : "Adicionar Exercício"} onPress={addOrEditExercise} color="#00aaff" />
 
           <FlatList
             style={{ maxHeight: 120, marginVertical: 10 }}
@@ -119,9 +130,20 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.exerciseItem}>
-                <Text style={styles.exerciseText}>
-                  {item.name} - Séries: {item.sets} - Reps: {item.reps}
-                </Text>
+                <Text style={styles.exerciseText}>{item.name} - Séries: {item.sets} - Reps: {item.reps}</Text>
+                <View style={styles.actions}>
+                  <TouchableOpacity onPress={() => {
+                    setExerciseName(item.name);
+                    setExerciseSets(item.sets);
+                    setExerciseReps(item.reps);
+                    setEditingExercise(item.id);
+                  }}>
+                    <Ionicons name="pencil" size={20} color="#00aaff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteExercise(item.id)}>
+                    <Ionicons name="trash" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           />
@@ -134,53 +156,16 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '80%',
-    backgroundColor: '#000',
-    borderRadius: 10,
-    padding: 20,
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 5,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 24,
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  subtitle: {
-    color: '#fff',
-    fontSize: 18,
-    marginVertical: 10,
-  },
-  input: {
-    color: '#fff',
-    borderColor: '#555',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
-  exerciseItem: {
-    backgroundColor: '#222',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 5,
-  },
-  exerciseText: {
-    color: '#fff',
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  container: { width: '80%', backgroundColor: '#000', borderRadius: 10, padding: 20, position: 'relative' },
+  closeButton: { position: 'absolute', top: 10, right: 10, padding: 5 },
+  title: { color: '#fff', fontSize: 24, marginBottom: 10, alignSelf: 'center' },
+  subtitle: { color: '#fff', fontSize: 18, marginVertical: 10 },
+  input: { color: '#fff', borderColor: '#555', borderWidth: 1, borderRadius: 5, padding: 10, marginBottom: 10 },
+  label: { color: '#fff', fontSize: 16, marginVertical: 5 },
+  exerciseItem: { backgroundColor: '#222', padding: 10, borderRadius: 5, marginBottom: 5, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  exerciseText: { color: '#fff' },
+  actions: { flexDirection: 'row', gap: 10 },
 });
 
 export default CreateWorkoutModal;
