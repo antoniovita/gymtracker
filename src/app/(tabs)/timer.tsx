@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 
 export default function TimerScreen() {
   const [selectedMinutes, setSelectedMinutes] = useState(1);
+  const [selectedSeconds, setSelectedSeconds] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -22,7 +23,7 @@ export default function TimerScreen() {
   }, [isRunning, seconds]);
 
   const startTimer = () => {
-    setSeconds(selectedMinutes * 60);
+    setSeconds(selectedMinutes * 60 + selectedSeconds);
     setIsRunning(true);
   };
 
@@ -33,16 +34,30 @@ export default function TimerScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.timer}>{`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}</Text>
-      <Picker
-        selectedValue={selectedMinutes}
-        onValueChange={(itemValue) => setSelectedMinutes(itemValue)}
-        style={styles.picker}
-        itemStyle={styles.pickerItem}
-      >
-        {[...Array(60).keys()].map((num) => (
-          <Picker.Item key={num + 1} label={`${num + 1} min`} value={num + 1} />
-        ))}
-      </Picker>
+
+      <View style={styles.pickerArea}>
+        <Picker
+          selectedValue={selectedMinutes}
+          onValueChange={(itemValue) => setSelectedMinutes(itemValue)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
+        >
+          {[...Array(60).keys()].map((num) => (
+            <Picker.Item key={num + 1} label={`${num + 1} min`} value={num + 1} />
+          ))}
+        </Picker>
+
+        <Picker
+          selectedValue={selectedSeconds}
+          onValueChange={(itemValue) => setSelectedSeconds(itemValue)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
+        >
+          {[...Array(60).keys()].map((num) => (
+            <Picker.Item key={num + 1} label={`${num + 1} sec`} value={num + 1} />
+          ))}
+        </Picker>
+      </View>
 
       <View style={styles.buttonArea}>
         <TouchableOpacity style={styles.button} onPress={startTimer}>
@@ -59,6 +74,12 @@ export default function TimerScreen() {
 }
 
 const styles = StyleSheet.create({
+
+  pickerArea: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 30,
+  },
 
   buttonArea: {
     flexDirection: 'row',
@@ -77,7 +98,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   picker: {
-    width: '30%',
+    width: '60%',
     marginTop: 20,
     height: 30,
     backgroundColor: '#1a1a1a',

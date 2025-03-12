@@ -22,9 +22,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size, focused }) => (
+              <Ionicons name={focused ? "home" : "home-outline"} color={color} size={size} />
+            ),
         }}
       />
 
@@ -32,8 +32,8 @@ export default function TabLayout() {
         name="workouts"
         options={{
           title: 'Workouts',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="barbell-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "barbell" : "barbell-outline"} color={color} size={size} />
           ),
         }}
       />
@@ -42,8 +42,8 @@ export default function TabLayout() {
         name="timer"
         options={{
           title: 'Timer',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="alarm-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "alarm" : "alarm-outline"} color={color} size={size} />
           ),
         }}
       />

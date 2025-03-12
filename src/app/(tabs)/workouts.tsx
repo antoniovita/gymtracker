@@ -1,3 +1,4 @@
+// WorkoutsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,8 +9,8 @@ import {
   Dimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import CreateWorkout, { Workout } from '../../components/CreateWorkout';
+import { loadWorkouts, saveWorkouts, removeWorkout as removeWorkoutFromStorage } from '../../hooks/storage';
+import CreateWorkout, { Workout } from '../../../components/CreateWorkout';
 
 export default function WorkoutsScreen() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -17,31 +18,13 @@ export default function WorkoutsScreen() {
   const [expandedWorkoutIds, setExpandedWorkoutIds] = useState<string[]>([]);
 
   useEffect(() => {
-    loadWorkouts();
+    loadWorkouts().then(setWorkouts);
   }, []);
 
-  const removeWorkout = (id: string) => {
+  const handleRemoveWorkout = async (id: string) => {
+    await removeWorkoutFromStorage(id);
     const updatedWorkouts = workouts.filter((workout) => workout.id !== id);
     setWorkouts(updatedWorkouts);
-    saveWorkouts(updatedWorkouts);
-  };
-
-
-  const loadWorkouts = async () => {
-    try {
-      const storedWorkouts = await AsyncStorage.getItem('@workouts');
-      if (storedWorkouts) setWorkouts(JSON.parse(storedWorkouts));
-    } catch (error) {
-      console.error('Erro ao carregar treinos:', error);
-    }
-  };
-
-  const saveWorkouts = async (updatedWorkouts: Workout[]) => {
-    try {
-      await AsyncStorage.setItem('@workouts', JSON.stringify(updatedWorkouts));
-    } catch (error) {
-      console.error('Erro ao salvar treinos:', error);
-    }
   };
 
   const handleCreateWorkout = (newWorkout: Workout) => {
@@ -53,11 +36,12 @@ export default function WorkoutsScreen() {
 
   const toggleWorkoutDetails = (id: string) => {
     setExpandedWorkoutIds((prevIds) =>
-      prevIds.includes(id) ? prevIds.filter(workoutId => workoutId !== id) : [...prevIds, id]
+      prevIds.includes(id)
+        ? prevIds.filter(workoutId => workoutId !== id)
+        : [...prevIds, id]
     );
   };
 
-  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -65,43 +49,50 @@ export default function WorkoutsScreen() {
         <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
       </View>
 
-
       {showCreate && (
-        <CreateWorkout onCreateWorkout={handleCreateWorkout} visible={showCreate} onClose={() => setShowCreate(false)} />
+        <CreateWorkout
+          onCreateWorkout={handleCreateWorkout}
+          visible={showCreate}
+          onClose={() => setShowCreate(false)}
+        />
       )}
 
-    <FlatList
-      data={workouts}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ paddingBottom: 80 }}
-      renderItem={({ item }) => (
-        <View style={styles.itemAreaContainer}>
-          <TouchableOpacity onPress={() => toggleWorkoutDetails(item.id)} style={styles.workoutItem}>
-            <View style={styles.workoutHeader}>
-              <Text style={styles.workoutName}>{item.name}</Text>
-              <TouchableOpacity onPress={() => removeWorkout(item.id)}>
-                <Ionicons style={styles.deleteButton} name="trash" size={25} color="#ff4d4d" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.workoutDate}>
-              {new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-            </Text>
-
-            {expandedWorkoutIds.includes(item.id) && (
-              <View style={styles.exercisesContainer}>
-                {item.exercises.map((exercise) => (
-                  <Text key={exercise.id} style={styles.exerciseText}>
-                    {exercise.name} - Séries: {exercise.sets} - Reps: {exercise.reps}
-                  </Text>
-                ))}
+      <FlatList
+        data={workouts}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        renderItem={({ item }) => (
+          <View style={styles.itemAreaContainer}>
+            <TouchableOpacity onPress={() => toggleWorkoutDetails(item.id)} style={styles.workoutItem}>
+              <View style={styles.workoutHeader}>
+                <Text style={styles.workoutName}>{item.name}</Text>
+                <TouchableOpacity onPress={() => handleRemoveWorkout(item.id)}>
+                  <Ionicons style={styles.deleteButton} name="trash" size={25} color="#ff4d4d" />
+                </TouchableOpacity>
               </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-    />
+              <Text style={styles.workoutDate}>
+                {new Date(item.date).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
+              </Text>
 
-      <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(!showCreate)}>
+              {expandedWorkoutIds.includes(item.id) && (
+                <View style={styles.exercisesContainer}>
+                  {item.exercises.map((exercise) => (
+                    <Text key={exercise.id} style={styles.exerciseText}>
+                      {exercise.name} - Séries: {exercise.sets} - Reps: {exercise.reps}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+
+      <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(true)}>
         <Ionicons name="add" size={24} color="#fff" />
         <Text style={styles.fabText}>Add workout</Text>
       </TouchableOpacity>
@@ -110,23 +101,19 @@ export default function WorkoutsScreen() {
 }
 
 const styles = StyleSheet.create({
-
   workoutHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  
   itemAreaContainer: {
     width: '100%',
     marginBottom: 10,
   },
-
   deleteButton: {
     marginTop: 10,
     fontSize: 25,
   },
-
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -142,15 +129,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#fff',
     marginBottom: 40,
-  },
-  summaryContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  summaryText: {
-    color: '#fff',
-    fontSize: 16,
   },
   workoutItem: {
     backgroundColor: '#1a1a1a',
