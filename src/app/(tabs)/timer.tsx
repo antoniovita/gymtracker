@@ -4,9 +4,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 
 export default function TimerScreen() {
-  const [selectedMinutes, setSelectedMinutes] = useState(1);
-  const [selectedSeconds, setSelectedSeconds] = useState(0);
-  const [seconds, setSeconds] = useState(0);
+  const [selectedMinutes, setSelectedMinutes] = useState<number>(0);
+  const [selectedSeconds, setSelectedSeconds] = useState<number>(0);
+  const [seconds, setSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
@@ -15,6 +15,8 @@ export default function TimerScreen() {
       interval = setInterval(() => {
         setSeconds((prevSeconds) => prevSeconds - 1);
       }, 1000);
+      console.log(seconds);
+
     } else if (seconds === 0 && isRunning) {
       setIsRunning(false);
       alert('Timer finalizado!');
@@ -23,17 +25,25 @@ export default function TimerScreen() {
   }, [isRunning, seconds]);
 
   const startTimer = () => {
+    console.log(selectedMinutes)
+    console.log(selectedSeconds)
     setSeconds(selectedMinutes * 60 + selectedSeconds);
     setIsRunning(true);
+    console.log(typeof selectedMinutes)
+    console.log(typeof selectedSeconds)
   };
 
   const pauseTimer = () => {
     setIsRunning(false)
   };
 
+  
+
   return (
     <View style={styles.container}>
-      <Text style={styles.timer}>{`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}</Text>
+      <Text style={styles.timer}>
+        {`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}
+      </Text>
 
       <View style={styles.pickerArea}>
         <Picker
@@ -42,8 +52,8 @@ export default function TimerScreen() {
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {[...Array(60).keys()].map((num) => (
-            <Picker.Item key={num + 1} label={`${num + 1} min`} value={num + 1} />
+          {Array.from({ length: 61 }, (_, index) => index).map((num) => (
+            <Picker.Item key={num} label={`${num} min`} value={num} />
           ))}
         </Picker>
 
@@ -53,8 +63,8 @@ export default function TimerScreen() {
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {[...Array(60).keys()].map((num) => (
-            <Picker.Item key={num + 1} label={`${num + 1} sec`} value={num + 1} />
+          {Array.from({ length: 61 }, (_, index) => index + 1).map((num) => (
+            <Picker.Item key={num} label={`${num} sec`} value={num} />
           ))}
         </Picker>
       </View>
