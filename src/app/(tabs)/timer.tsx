@@ -27,7 +27,7 @@ export default function TimerScreen() {
   const startTimer = () => {
     console.log(selectedMinutes)
     console.log(selectedSeconds)
-    setSeconds(selectedMinutes * 60 + selectedSeconds);
+    setSeconds(Number(selectedMinutes) * 60 + Number(selectedSeconds));
     setIsRunning(true);
     console.log(typeof selectedMinutes)
     console.log(typeof selectedSeconds)
@@ -63,7 +63,7 @@ export default function TimerScreen() {
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {Array.from({ length: 61 }, (_, index) => index + 1).map((num) => (
+          {Array.from({ length: 59 }, (_, index) => index + 1).map((num) => (
             <Picker.Item key={num} label={`${num} sec`} value={num} />
           ))}
         </Picker>
