@@ -37,10 +37,8 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [exerciseName, setExerciseName] = useState('');
-  // Inicializa o número de sets com 2 (pode ser alterado)
-  const [exerciseSets, setExerciseSets] = useState<number>(2);
-  // Inicializa reps como null; posteriormente o usuário pode alterar
-  const [exerciseReps, setExerciseReps] = useState<number | null>(null);
+  const [exerciseSets, setExerciseSets] = useState<number>(3);
+  const [exerciseReps, setExerciseReps] = useState<number>(10);
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
 
   const addOrEditExercise = () => {
@@ -66,8 +64,8 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
     }
 
     setExerciseName('');
-    setExerciseSets(2);
-    setExerciseReps(null);
+    setExerciseSets(3);
+    setExerciseReps(10);
   };
 
   const deleteExercise = (id: string) => {
@@ -80,7 +78,7 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
     const newWorkout: Workout = {
       id: Date.now().toString(),
       name: workoutName,
-      date: new Date().toLocaleDateString(),
+      date: new Date().toISOString(),
       exercises,
     };
 
@@ -93,25 +91,28 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { paddingTop: statusBarHeight + 30 }]}>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="chevron-down" size={28} color="#fff" />
+        <TouchableOpacity style={{flexDirection: 'row'}} onPress={onClose}>
+          <Ionicons name="chevron-back" style={{marginTop: 1}} size={18} color="#00aaff" />
+          <Text style={{color: '#00aaff', fontSize: 16}}> Go back </Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Novo Treino</Text>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={styles.title}>New Workout</Text>
+        </View>
 
-        <Text style={styles.label}>Nome do treino</Text>
+        <Text style={styles.label}>Workout name</Text>
         <TextInput
           style={styles.input}
-          placeholder="Treino de peito..."
+          placeholder="Chest workout..."
           placeholderTextColor="#777"
           value={workoutName}
           onChangeText={setWorkoutName}
         />
 
-        <Text style={styles.label}>Nome do exercício</Text>
+        <Text style={styles.label}>Exercise name</Text>
         <TextInput
           style={styles.input}
-          placeholder="Supino reto..."
+          placeholder="Bench press"
           placeholderTextColor="#777"
           value={exerciseName}
           onChangeText={setExerciseName}
@@ -119,7 +120,7 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
 
         <View style={styles.pickerRow}>
           <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Séries</Text>
+            <Text style={styles.pickerLabel}>Series</Text>
             <View style={styles.pickerNumber}>
               <TouchableOpacity
                 onPress={() => setExerciseSets((prev) => prev + 1)}
@@ -152,16 +153,19 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
                 <Ionicons color="#ddd" size={25} name="chevron-down" />
               </TouchableOpacity>
             </View>
+
+              
           </View>
+
+            <TouchableOpacity onPress={addOrEditExercise} style={styles.addButton}>
+              <Ionicons name='add' color={'#fff'} size={20}></Ionicons>
+              <Text style={{color: '#fff', fontSize: 15,}}> Add </Text>
+            </TouchableOpacity>
+
         </View>
 
-        <TouchableOpacity onPress={addOrEditExercise} style={styles.addButton}>
-          <Text style={styles.addButtonText}>
-            {editingExercise ? 'Editar Exercício' : 'Adicionar Exercício'}
-          </Text>
-        </TouchableOpacity>
-
         <FlatList
+        showsVerticalScrollIndicator={false}
           data={exercises}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -177,7 +181,8 @@ const CreateWorkoutModal: React.FC<CreateWorkoutProps> = ({ visible, onClose, on
         />
 
         <TouchableOpacity onPress={handleCreateWorkout} style={styles.createButton}>
-          <Text style={styles.createButtonText}>Salvar Treino</Text>
+          <Ionicons name="checkmark-outline" color={'#fff'} size={22}></Ionicons>
+          <Text style={styles.createButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
     </Modal>
@@ -218,12 +223,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '400',
+    fontSize: 20,
     color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: 40,
+    fontWeight: 200,
   },
+
   label: {
     fontSize: 16,
     color: '#fff',
@@ -242,8 +247,7 @@ const styles = StyleSheet.create({
   pickerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 40,
-    marginTop: 20,
+    marginTop: 10,
     gap: 20,
   },
   exerciseItem: {
@@ -260,30 +264,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  addButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
   createButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
+    backgroundColor: '#00aaff',
+    width: '50%',
+    paddingVertical: 15,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 15,
+  },
+
+
+
+  addButton: {
+    backgroundColor: '#00aaff',
+    width: '30%',
+    paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 30,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 5,
   },
+
+
   createButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
   },
 });
 

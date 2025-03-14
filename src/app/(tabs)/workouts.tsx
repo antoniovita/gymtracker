@@ -59,6 +59,7 @@ export default function WorkoutsScreen() {
 
       <FlatList
         data={workouts}
+        showsVerticalScrollIndicator={false}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 80 }}
         renderItem={({ item }) => (
@@ -85,7 +86,7 @@ export default function WorkoutsScreen() {
                         <Text style={styles.boldTitle}> {exercise.name} </Text>
                         <View style={{flexDirection: 'row', gap: 10}}>
                             <Text style={styles.numbersEx}> {exercise.sets} </Text>
-                            <Text style={styles.numbersEx}> {exercise.sets} </Text>
+                            <Text style={styles.numbersEx}> {exercise.reps} </Text>
                         </View>
                         
                     </View>
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10,
   },
+
   deleteButton: {
     marginTop: 12,
     fontSize: 25,

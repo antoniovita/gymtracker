@@ -1,9 +1,7 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
 
   return (
     <Tabs
@@ -13,7 +11,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#00aaff',
         tabBarInactiveTintColor: '#888',
         tabBarStyle: {
-          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+          backgroundColor:  '#000',
           borderTopWidth: 0,
         },
       }}

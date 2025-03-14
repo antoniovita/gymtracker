@@ -2,12 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
+import Constants from 'expo-constants';
+import { Audio } from 'expo-av';
+import TimerFinished from '../../components/TimerFinished';
+
 
 export default function TimerScreen() {
-  const [selectedMinutes, setSelectedMinutes] = useState<number>(0);
-  const [selectedSeconds, setSelectedSeconds] = useState<number>(0);
+  const [selectedMinutes, setSelectedMinutes] = useState<string>('0');
+  const [selectedSeconds, setSelectedSeconds] = useState<string>('0');
   const [seconds, setSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isTimerFinished, setIsTimerFinished] = useState(false);
+
+  async function playAlarm() {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../../assets/alarm.mp3') 
+      );
+      setSound(sound);
+      await sound.playAsync();
+    } catch (error) {
+      console.log('Erro ao tocar o som:', error);
+    }
+  }
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -15,32 +33,41 @@ export default function TimerScreen() {
       interval = setInterval(() => {
         setSeconds((prevSeconds) => prevSeconds - 1);
       }, 1000);
-      console.log(seconds);
-
     } else if (seconds === 0 && isRunning) {
       setIsRunning(false);
-      alert('Timer finalizado!');
+      playAlarm();
+      setIsTimerFinished(true);
     }
     return () => clearInterval(interval);
   }, [isRunning, seconds]);
 
   const startTimer = () => {
-    console.log(selectedMinutes)
-    console.log(selectedSeconds)
-    setSeconds(Number(selectedMinutes) * 60 + Number(selectedSeconds));
+    setSeconds(parseInt(selectedMinutes) * 60 + parseInt(selectedSeconds));
     setIsRunning(true);
-    console.log(typeof selectedMinutes)
-    console.log(typeof selectedSeconds)
   };
+
+  // Tornando a função assíncrona
+  const stopAlarm = async () => {
+    if (sound) { 
+      await sound.stopAsync();  // Agora a função pode usar await corretamente
+    }
+    setIsTimerFinished(false);
+  }
 
   const pauseTimer = () => {
-    setIsRunning(false)
+    setIsRunning(false);
   };
-
-  
 
   return (
     <View style={styles.container}>
+      {isTimerFinished ? (
+        <TimerFinished stopAlarm={stopAlarm} />
+      ) : (
+        <View style={[styles.header, { paddingTop: Constants.statusBarHeight + 50 }]}>
+          <Text style={styles.headerDate}>My Timer</Text>
+        </View>
+      )}
+
       <Text style={styles.timer}>
         {`${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}
       </Text>
@@ -52,7 +79,7 @@ export default function TimerScreen() {
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {Array.from({ length: 61 }, (_, index) => index).map((num) => (
+          {Array.from({ length: 61 }, (_, index) => index.toString()).map((num) => (
             <Picker.Item key={num} label={`${num} min`} value={num} />
           ))}
         </Picker>
@@ -63,7 +90,7 @@ export default function TimerScreen() {
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {Array.from({ length: 59 }, (_, index) => index + 1).map((num) => (
+          {Array.from({ length: 59 }, (_, index) => (index + 1).toString()).map((num) => (
             <Picker.Item key={num} label={`${num} sec`} value={num} />
           ))}
         </Picker>
@@ -78,40 +105,95 @@ export default function TimerScreen() {
           <Ionicons name="pause" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-      
+
+      <View style={{ alignItems: 'center', marginTop: 80 }}>
+        <Text style={[styles.headerDate, { marginBottom: 15 }]}>Popular timers</Text>
+
+        <View style={styles.timerGrid}>
+          {[1, 2, 3, 5, 10, 15].map((time) => (
+            <View key={time} style={styles.timerOptions}>
+              <Text style={styles.timerOptionText}>{time} min</Text>
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={() => setSeconds(time * 60)}
+              >
+                <Ionicons name="play" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  timerGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '90%',
+  },
+
+  timerOptions: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 10,
+    width: '48%', // Divide em 2 colunas
+    alignItems: 'center',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  playButton: {
+    backgroundColor: '#00aaff',
+    padding: 10,
+    borderRadius: 100,
+  },
+
+  timerOptionText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerDate: {
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 40,
+    fontWeight: '200',
+  },
 
   pickerArea: {
     flexDirection: 'row',
     gap: 20,
     marginBottom: 30,
   },
-
   buttonArea: {
     flexDirection: 'row',
     gap: 20,
+    backgroundColor: '#00aaff',
+    borderRadius: 30,
   },
-
   container: {
     flex: 1,
     backgroundColor: '#000',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    fontSize: 24,
-    color: '#ffff',
-    marginBottom: 20,
   },
   picker: {
     width: '60%',
-    marginTop: 20,
     height: 30,
-    backgroundColor: '#1a1a1a',
     color: '#fff',
     borderRadius: 10,
     marginBottom: 30,
@@ -124,18 +206,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#00aaff',
     padding: 12,
-    borderRadius: '100%',
+    borderRadius: 100,
     alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    marginLeft: 8,
-  },
   timer: {
-    fontSize: 48,
+    fontSize: 60,
     color: '#fff',
-    marginTop: 20,
-    fontWeight: 'bold'
+    marginTop: 10,
+    fontWeight: 'bold',
   },
 });
+
