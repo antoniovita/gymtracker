@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { loadWorkouts, saveWorkouts, removeWorkout as removeWorkoutFromStorage } from '../../hooks/storage';
-import CreateWorkout, { Workout } from '../../../components/CreateWorkout';
+import CreateWorkout, { Workout } from '../../components/CreateWorkout';
+import Constants from 'expo-constants';
 
 export default function WorkoutsScreen() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -45,8 +46,7 @@ export default function WorkoutsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerDate}>My Workouts</Text>
-        <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
+        <Text style={[styles.headerDate, {paddingTop: Constants.statusBarHeight}]}>My Workouts</Text>
       </View>
 
       {showCreate && (
@@ -81,9 +81,14 @@ export default function WorkoutsScreen() {
               {expandedWorkoutIds.includes(item.id) && (
                 <View style={styles.exercisesContainer}>
                   {item.exercises.map((exercise) => (
-                    <Text key={exercise.id} style={styles.exerciseText}>
-                      {exercise.name} - Séries: {exercise.sets} - Reps: {exercise.reps}
-                    </Text>
+                    <View style={styles.exercise}>
+                        <Text style={styles.boldTitle}> {exercise.name} </Text>
+                        <View style={{flexDirection: 'row', gap: 10}}>
+                            <Text style={styles.numbersEx}> {exercise.sets} </Text>
+                            <Text style={styles.numbersEx}> {exercise.sets} </Text>
+                        </View>
+                        
+                    </View>
                   ))}
                 </View>
               )}
@@ -101,6 +106,34 @@ export default function WorkoutsScreen() {
 }
 
 const styles = StyleSheet.create({
+
+  numbersEx: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: '100%',
+    fontSize: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    padding: 5,
+  },
+
+  boldTitle: {
+    color: '#fff',
+    fontSize: 16,
+
+  },
+
+  exercise: {
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingLeft: 20,
+    alignItems: 'center',
+  },
+
   workoutHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -111,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   deleteButton: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 25,
   },
   container: {
@@ -122,13 +155,14 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerDate: {
     fontSize: 20,
     color: '#fff',
     marginBottom: 40,
+    fontWeight: 200,
   },
   workoutItem: {
     backgroundColor: '#1a1a1a',

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Workout } from '../../components/CreateWorkout';
+import { Workout } from '../components/CreateWorkout';
 
 const WORKOUTS_KEY = '@workouts';
 
